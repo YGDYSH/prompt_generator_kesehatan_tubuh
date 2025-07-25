@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Health Reminder Generator</title>
+    <style>
+      /* Global styles */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      /* Body and background */
+      body {
+        background: linear-gradient(135deg, #a8edea, #fed6e3);
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      /* Card container for sections */
+      .card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+        width: 100%;
+        max-width: 420px;
+        text-align: center;
+        transition: 0.3s ease;
+      }
+
+      /* Headings */
+      h1,
+      h2 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+      }
+
+      /* Screen management (show/hide sections) */
+      .screen {
+        display: none;
+      }
+      .active {
+        display: block;
+      }
+
+      /* Form styling */
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      /* Label styling */
+      label {
+        text-align: left;
+        font-size: 14px;
+        font-weight: 600;
+        color: #34495e;
+      }
+
+      /* Input, select, textarea styling */
+      input,
+      select,
+      textarea {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      /* Focus states for form elements */
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #6c5ce7;
+        box-shadow: 0 0 5px rgba(108, 92, 231, 0.3);
+        outline: none;
+      }
+
+      /* Textarea specific styling */
+      textarea {
+        width: 100%;
+        min-height: 80px;
+        resize: vertical;
+      }
+
+      /* Modern Gradient Buttons */
+      button {
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+        margin-top: 10px;
+      }
+
+      /* Button hover effects */
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        filter: brightness(1.05);
+      }
+
+      /* Specific button colors */
+      .btn-start {
+        background: linear-gradient(135deg, #ff9966, #ff5e62); /* orange-pink */
+      }
+
+      .btn-calc {
+        background: linear-gradient(135deg, #6a11cb, #2575fc); /* blue-purple */
+      }
+
+      .btn-reset {
+        background: linear-gradient(135deg, #11998e, #38ef7d); /* green-teal */
+      }
+
+      .btn-copy {
+        background: linear-gradient(135deg, #00b09b, #96c93d); /* green-lime */
+        font-size: 14px;
+      }
+
+      .btn-generate {
+        background: linear-gradient(
+          135deg,
+          #f7971e,
+          #ffd200
+        ); /* modern yellow */
+        font-size: 14px;
+      }
+
+      /* Paragraph styling */
+      p {
+        margin: 8px 0;
+        font-size: 15px;
+        color: #2c3e50;
+      }
+
+      /* Prompt box styling */
+      .prompt-box {
+        margin-top: 20px;
+        text-align: left;
+      }
+
+      .prompt-box strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      /* Message box styles */
+      .message-box-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        visibility: hidden;
+        opacity: 0;
+        transition: visibility 0s, opacity 0.3s ease;
+      }
+
+      .message-box-overlay.show {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .message-box-content {
+        background: #fff;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        max-width: 350px;
+        width: 90%;
+        transform: translateY(-20px);
+        transition: transform 0.3s ease;
+      }
+
+      .message-box-overlay.show .message-box-content {
+        transform: translateY(0);
+      }
+
+      .message-box-content p {
+        margin-bottom: 20px;
+        font-size: 16px;
+        color: #333;
+      }
+
+      .message-box-content button {
+        background: linear-gradient(135deg, #6a11cb, #2575fc);
+        padding: 10px 20px;
+        font-size: 15px;
+        margin-top: 0; /* Override default button margin-top */
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 500px) {
+        .card {
+          padding: 20px;
+        }
+        h1,
+        h2 {
+          font-size: 1.5rem;
+        }
+        .message-box-content {
+          padding: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Main Page -->
+    <div class="card screen active" id="home">
+      <h1>Health Reminder</h1>
+      <p>Hitung kebutuhan air, langkah, olahraga, dan kalori harian Anda</p>
+      <button class="btn-start" onclick="goToForm()">Mulai</button>
+    </div>
+
+    <!-- Input Form -->
+    <div class="card screen" id="form-section">
+      <h2>Data Pribadi</h2>
+      <form id="healthForm">
+        <div>
+          <label for="gender">Jenis Kelamin</label>
+          <select id="gender">
+            <option value="male">Pria</option>
+            <option value="female">Wanita</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="weight">Berat Badan (kg)</label>
+          <input type="number" id="weight" required />
+        </div>
+
+        <div>
+          <label for="height">Tinggi Badan (cm)</label>
+          <input type="number" id="height" required />
+        </div>
+
+        <div>
+          <label for="age">Usia</label>
+          <input type="number" id="age" required />
+        </div>
+
+        <div>
+          <label for="busyTime">Jam Sibuk (contoh: 08:00-17:00)</label>
+          <input type="text" id="busyTime" placeholder="08:00-17:00" />
+        </div>
+
+        <button type="submit" class="btn-calc">Hitung</button>
+      </form>
+    </div>
+
+    <!-- Results Section -->
+    <div class="card screen" id="result">
+      <h2>Rekomendasi Anda</h2>
+      <p id="water"></p>
+      <p id="exercise"></p>
+      <p id="steps"></p>
+      <p id="calories"></p>
+      <p id="bestTime"></p>
+
+      <!-- Custom Prompt Section -->
+      <div class="prompt-box">
+        <strong>Buat Prompt Baru:</strong>
+        <textarea
+          id="customPrompt"
+          placeholder="Tulis prompt generator Anda di sini..."
+        ></textarea>
+        <button class="btn-generate" onclick="generatePrompt()">
+          Generate Prompt Otomatis
+        </button>
+        <button class="btn-copy" onclick="copyPrompt()">Salin Prompt</button>
+      </div>
+
+      <button class="btn-reset" onclick="resetApp()">Hitung Ulang</button>
+    </div>
+
+    <!-- Custom Message Box HTML -->
+    <div class="message-box-overlay" id="messageBoxOverlay">
+      <div class="message-box-content">
+        <p id="messageBoxText"></p>
+        <button onclick="hideMessageBox()">OK</button>
+      </div>
+    </div>
+
+    <script>
+      let lastInput = {}; // Stores the last input data
+
+      /**
+       * Shows a custom message box with a given message.
+       * @param {string} message - The message to display.
+       */
+      function showMessageBox(message) {
+        document.getElementById("messageBoxText").textContent = message;
+        document.getElementById("messageBoxOverlay").classList.add("show");
+      }
+
+      /**
+       * Hides the custom message box.
+       */
+      function hideMessageBox() {
+        document.getElementById("messageBoxOverlay").classList.remove("show");
+      }
+
+      /**
+       * Navigates from the home screen to the form section.
+       */
+      function goToForm() {
+        document.getElementById("home").classList.remove("active");
+        document.getElementById("form-section").classList.add("active");
+      }
+
+      // Event listener for form submission
+      document
+        .getElementById("healthForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault(); // Prevent default form submission
+
+          // Get input values
+          const gender = document.getElementById("gender").value;
+          const weight = parseFloat(document.getElementById("weight").value);
+          const height = parseFloat(document.getElementById("height").value);
+          const age = parseInt(document.getElementById("age").value);
+          const busyTime = document.getElementById("busyTime").value;
+
+          // Store current input for prompt generation
+          lastInput = { gender, weight, height, age, busyTime };
+
+          // Calculate BMI
+          const heightM = height / 100; // Convert cm to meters
+          const bmi = weight / (heightM * heightM);
+
+          // Calculate daily water need (35ml per kg of body weight)
+          const waterNeed = (weight * 35) / 1000; // Convert ml to liters
+
+          // Determine exercise duration based on BMI
+          let exerciseTime;
+          if (bmi < 18.5) {
+            // Underweight
+            exerciseTime = 20;
+          } else if (bmi >= 18.5 && bmi <= 24.9) {
+            // Normal weight
+            exerciseTime = 30;
+          } else {
+            // Overweight/Obese
+            exerciseTime = 40;
+          }
+
+          // Determine daily step target based on age and weight
+          let steps;
+          if (age < 20) {
+            if (weight < 50) steps = 9000;
+            else if (weight <= 70) steps = 10000;
+            else steps = 11000;
+          } else if (age <= 40) {
+            if (weight < 50) steps = 7000;
+            else if (weight <= 70) steps = 8000;
+            else steps = 9000;
+          } else {
+            // Age > 40
+            if (weight < 50) steps = 5000;
+            else if (weight <= 70) steps = 6000;
+            else steps = 7000;
+          }
+
+          // Calculate Daily Caloric Intake (TDEE - Total Daily Energy Expenditure)
+          // Using Mifflin-St Jeor Equation for BMR, then multiplying by activity factor (1.375 for light activity)
+          let bmr;
+          if (gender === "male") {
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+          } else {
+            // female
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+          }
+          const tdee = bmr * 1.375; // Assuming light activity level
+
+          // Suggest best exercise time based on busy hours
+          let bestTime;
+          if (busyTime && busyTime.includes("-")) {
+            const parts = busyTime.split("-");
+            const start = parts[0];
+            const end = parts[1];
+            bestTime = `Sebaiknya olahraga sebelum ${start} atau setelah ${end}`;
+          } else {
+            bestTime =
+              "Sebaiknya olahraga pagi (06:00-07:00) atau sore (17:00-18:00)";
+          }
+
+          // Display results
+          document.getElementById("form-section").classList.remove("active");
+          document.getElementById("result").classList.add("active");
+          document.getElementById(
+            "water"
+          ).textContent = `Air: ${waterNeed.toFixed(1)} L/hari`;
+          document.getElementById(
+            "exercise"
+          ).textContent = `Olahraga: ${exerciseTime} menit/hari`;
+          document.getElementById(
+            "steps"
+          ).textContent = `Langkah: ${steps} langkah/hari`;
+          document.getElementById(
+            "calories"
+          ).textContent = `Kalori Harian: ${Math.round(tdee)} kkal/hari`;
+          document.getElementById(
+            "bestTime"
+          ).textContent = `Waktu Olahraga: ${bestTime}`;
+        });
+
+      /**
+       * Generates an automatic prompt based on the last calculated health data.
+       */
+      function generatePrompt() {
+        if (!lastInput.weight) {
+          showMessageBox(
+            "Hitung dulu rekomendasi sebelum generate prompt otomatis!"
+          );
+          return;
+        }
+
+        const { gender, weight, height, age, busyTime } = lastInput;
+
+        const prompt = `Buat aplikasi web pengingat kesehatan berbasis data berikut:
+- Jenis Kelamin: ${gender === "male" ? "Pria" : "Wanita"}
+- Berat: ${weight} kg
+- Tinggi: ${height} cm
+- Usia: ${age} tahun
+- Jam Sibuk: ${busyTime || "Tidak Diisi"}
+
+Fitur:
+- Hitung kebutuhan air harian (35ml x berat)
+- Durasi olahraga berdasarkan BMI
+- Target langkah harian berdasarkan usia & berat
+- Hitung kalori harian (BMR x 1.375)
+- Rekomendasi waktu olahraga sesuai jam sibuk
+UI modern dengan gradien warna.`;
+
+        document.getElementById("customPrompt").value = prompt;
+      }
+
+      /**
+       * Copies the generated prompt text to the clipboard.
+       */
+      function copyPrompt() {
+        const promptText = document.getElementById("customPrompt");
+        if (!promptText.value) {
+          showMessageBox("Tidak ada prompt untuk disalin.");
+          return;
+        }
+        promptText.select();
+        document.execCommand("copy");
+        showMessageBox("Prompt berhasil disalin!");
+      }
+
+      /**
+       * Resets the application to the home screen and clears the prompt.
+       */
+      function resetApp() {
+        document.getElementById("result").classList.remove("active");
+        document
+          .getElementById("form-section")
+          .classList.remove("active"); /* Ensure form is hidden */
+        document.getElementById("home").classList.add("active");
+        document.getElementById("customPrompt").value = "";
+        lastInput = {}; // Clear last input data
+      }
+    </script>
+  </body>
+</html>
